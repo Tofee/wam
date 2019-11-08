@@ -43,9 +43,7 @@ isEmpty(PLATFORM) {
 
 DEFINES += $$PLATFORM
 
-contains(PLATFORM, PLATFORM_WEBOS) {
-    include(device.pri)
-}
+include(device.pri)
 
 ################################################################################
 # snapshot-boot
