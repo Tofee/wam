@@ -35,9 +35,7 @@ CONFIG += link_pkgconfig
 QT = core
 
 ################################################################################
-# Decide MACHINE_NAME and PLATFORM
-
-MACHINE_NAME = $$(MACHINE)
+# Decide PLATFORM
 
 isEmpty(PLATFORM) {
     error("PLATFORM wasn't set")
@@ -47,10 +45,6 @@ DEFINES += $$PLATFORM
 
 contains(PLATFORM, PLATFORM_WEBOS) {
     include(device.pri)
-} else {
-    isEmpty(MACHINE_NAME) {
-        error(MACHINE_NAME should not be empty. $$MACHINE_NAME)
-    }
 }
 
 ################################################################################
@@ -62,7 +56,7 @@ contains(PLATFORM, PLATFORM_WEBOS) {
 #       EXTRA_QMAKEVARS_PRE +=  "CONFIG_BUILD+=snapshot_boot"
 contains(CONFIG_BUILD, snapshot_boot) {
     CONFIG += snapshot_boot
-    message($$MACHINE_NAME $$PLATFORM use snapshot boot)
+    message($$PLATFORM use snapshot boot)
 }
 
 snapshot_boot {
@@ -104,7 +98,7 @@ QMAKE_CXXFLAGS += -Werror \
 ################################################################################
 # .o and .moc
 
-DESTDIR = ./$${BUILD_TYPE}-$${MACHINE_NAME}
+DESTDIR = ./$${BUILD_TYPE}
 OBJECTS_DIR = $$DESTDIR/.obj
 MOC_DIR = $$DESTDIR/.moc
 LIBS += -L$$DESTDIR
