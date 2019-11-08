@@ -19,9 +19,9 @@
 [Unit]
 Description=webos - "%n"
 Requires=ls-hubd.service
-Wants=surface-manager.service
-After=ls-hubd.service surface-manager.service
-BindsTo=surface-manager.service
+Wants=luna-next.service
+After=ls-hubd.service luna-next.service
+BindsTo=luna-next.service
 
 [Service]
 Type=simple
