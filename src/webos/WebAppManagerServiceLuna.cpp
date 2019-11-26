@@ -355,7 +355,7 @@ void WebAppManagerServiceLuna::didConnect()
         LOG_WARNING(MSGID_MEMORY_CONNECT_FAIL, 0, "Failed to connect to memory manager");
     }
 
-    params["serviceName"] = QStringLiteral("com.webos.applicationManager");
+    params["serviceName"] = QStringLiteral("com.palm.applicationManager");
     if (!GET_LS2_SERVER_STATUS(applicationManagerConnectCallback, params)) {
         LOG_WARNING(MSGID_APPMANAGER_CONNECT_FAIL, 0, "Failed to connect to application manager");
     }
@@ -513,14 +513,14 @@ void WebAppManagerServiceLuna::applicationManagerConnectCallback(QJsonObject rep
         params["subscribe"] = true;
 
         if (!call<WebAppManagerServiceLuna, &WebAppManagerServiceLuna::getAppStatusCallback>(
-                "luna://com.webos.applicationManager/listApps",
+                "luna://com.palm.applicationManager/listApps",
                 params, this)) {
             LOG_WARNING(MSGID_APP_MGR_API_CALL_FAIL, 0, "Failed to get an application list");
         }
 
         params["extraInfo"] = true;
         if (!call<WebAppManagerServiceLuna, &WebAppManagerServiceLuna::getForegroundAppInfoCallback>(
-                "luna://com.webos.applicationManager/getForegroundAppInfo",
+                "luna://com.palm.applicationManager/getForegroundAppInfo",
                 params, this)) {
             LOG_WARNING(MSGID_APP_MGR_API_CALL_FAIL, 0, "Failed to get foreground application Information");
         }
@@ -600,7 +600,7 @@ void WebAppManagerServiceLuna::launchContainerApp(const QString& id)
     json["id"] = id;
     json["noSplash"] = true;
 
-    if (!LS2_CALL(launchContainerAppCallback, "luna://com.webos.applicationManager/launch", json)) {
+    if (!LS2_CALL(launchContainerAppCallback, "luna://com.palm.applicationManager/launch", json)) {
         LOG_WARNING(MSGID_CONTAINER_LAUNCH_FAIL, 0, "Failed to launch container via applicationManager");
     }
 }
@@ -616,7 +616,7 @@ void WebAppManagerServiceLuna::closeApp(const std::string& id)
     QJsonObject json;
     json["id"] = QString::fromStdString(id);
 
-    if (!LS2_CALL(closeAppCallback, "luna://com.webos.applicationManager/closeByAppId", json))
+    if (!LS2_CALL(closeAppCallback, "luna://com.palm.applicationManager/closeByAppId", json))
         LOG_WARNING(MSGID_CLOSE_CALL_FAIL, 0, "Failed to send closeByAppId command to SAM");
 }
 
