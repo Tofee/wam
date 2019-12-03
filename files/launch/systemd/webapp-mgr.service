@@ -31,3 +31,6 @@ ExecStart=/etc/systemd/system/scripts/webapp-mgr.sh
 ExecStartPost=-/bin/chgrp compositor /dev/mem
 ExecStartPost=-/bin/chmod 660 /dev/mem
 Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
