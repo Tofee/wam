@@ -3,6 +3,7 @@
         "activities",
         "applications.internal",
         "networking",
+        "networking.internal",
         "settings.read",
         "signals.all",
         "signals.register",
