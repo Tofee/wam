@@ -46,7 +46,6 @@ public:
     WebAppBase();
     ~WebAppBase() override;
 
-    virtual void init(int width, int height) = 0;
     virtual void attach(WebPageBase*);
     virtual WebPageBase* detach();
     virtual void suspendAppRendering() = 0;
@@ -91,8 +90,6 @@ public:
     bool getCrashState();
     void setCrashState(bool state);
     bool getHiddenWindow();
-    void setWasContainerApp(bool contained);
-    bool wasContainerApp() const;
     bool keepAlive() const;
     void setForceClose();
     bool forceClose();
@@ -161,7 +158,6 @@ private:
     bool m_needReload;
     bool m_crashed;
     bool m_hiddenWindow;
-    bool m_wasContainerApp; // should be set to true if launched via container
     bool m_closePageRequested; // window.close() is called once then have to drop further requests
 };
 #endif // WEBAPPBASE_H

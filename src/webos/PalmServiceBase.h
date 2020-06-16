@@ -208,7 +208,8 @@ public:
     virtual ~PalmServiceBase();
 
     bool startService();
-    virtual bool stopService(LSErrorSafe* error = 0);
+    bool stopService();
+
 /*
  *  Methods to issue calls to the LS2 bus, optional parameters are a callback context
  *  and applicationId
@@ -278,12 +279,16 @@ protected:
     LSHandle* m_serviceHandle;
 
 private:
+    PalmServiceBase(const PalmServiceBase&) = delete;
+    PalmServiceBase& operator=(const PalmServiceBase&) = delete;
     static bool serviceConnectCallback(LSHandle* sh, LSMessage* message, void* ctx);
+
     bool call(LSHandle* service,
         const char* what,
         QJsonObject parameters,
         const char* applicationId,
         LSCalloutContext* context);
+    std::string m_serviceName;
 };
 
 #endif /* PalmServiceBase_H */

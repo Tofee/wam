@@ -20,9 +20,9 @@
 
 WebAppManagerConfig::WebAppManagerConfig()
     : m_suspendDelayTime(0)
+    , m_maxCustomSuspendDelayTime(0)
     , m_devModeEnabled(false)
     , m_inspectorEnabled(false)
-    , m_containerAppEnabled(true)
     , m_dynamicPluggableLoadEnabled(false)
     , m_postWebProcessCreatedDisabled(false)
     , m_checkLaunchTimeEnabled(false)
@@ -44,14 +44,14 @@ void WebAppManagerConfig::initConfiguration()
     QString suspendDelay = QLatin1String(qgetenv("WAM_SUSPEND_DELAY_IN_MS"));
     m_suspendDelayTime = std::max(suspendDelay.toInt(), 1);
 
+    QString maxCustomSuspendDelay = QLatin1String(qgetenv("MAX_CUSTOM_SUSPEND_DELAY_IN_MS"));
+    m_maxCustomSuspendDelayTime = std::max(maxCustomSuspendDelay.toInt(), 0);
+
     m_webProcessConfigPath = QLatin1String(qgetenv("WEBPROCESS_CONFIGURATION_PATH"));
     if (m_webProcessConfigPath.isEmpty())
         m_webProcessConfigPath = QLatin1String("/etc/wam/com.webos.wam.json");
 
     m_errorPageUrl = QLatin1String(qgetenv("WAM_ERROR_PAGE"));
-
-    if (qgetenv("DISABLE_CONTAINER") == "1")
-        m_containerAppEnabled = false;
 
     if (qgetenv("LOAD_DYNAMIC_PLUGGABLE") == "1")
         m_dynamicPluggableLoadEnabled = true;

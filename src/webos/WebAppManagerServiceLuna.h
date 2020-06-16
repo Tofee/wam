@@ -30,7 +30,6 @@ public:
     static WebAppManagerServiceLuna* instance();
 
     bool startService();
-    bool stopService(LSErrorSafe* error = 0) override;
 
     // WebAppManagerService
     QJsonObject launchApp(QJsonObject request) override;
@@ -42,17 +41,12 @@ public:
     QJsonObject listRunningApps(QJsonObject request, bool subscribed) override;
     QJsonObject closeByProcessId(QJsonObject request) override;
     QJsonObject getWebProcessSize(QJsonObject request) override;
+    QJsonObject pauseApp(QJsonObject request) override;
     QJsonObject clearBrowsingData(QJsonObject request) override;
     QJsonObject webProcessCreated(QJsonObject request, bool subscribed) override;
 
     // PlamServiceBase
     void didConnect() override;
-
-#ifndef PRELOADMANAGER_ENABLED
-    //callback methods that return from the bus
-    void launchContainerApp(const QString& id);
-    void launchContainerAppCallback(QJsonObject reply);
-#endif
 
     // WebAppManagerServiceLuna
     virtual void systemServiceConnectCallback(QJsonObject reply);
@@ -61,7 +55,6 @@ public:
 
     void memoryManagerConnectCallback(QJsonObject reply);
     void getCloseAppIdCallback(QJsonObject reply);
-    void clearContainersCallback(QJsonObject reply);
     void thresholdChangedCallback(QJsonObject reply);
 
     void applicationManagerConnectCallback(QJsonObject reply);

@@ -87,6 +87,7 @@ WebPageBlink::WebPageBlink(const QUrl& url, std::shared_ptr<ApplicationDescripti
     , m_vkbWasOverlap(false)
     , m_hasCloseCallback(false)
     , m_trustLevel(QString::fromStdString(desc->trustLevel()))
+    , m_customSuspendDOMTime(0)
     , m_observer(nullptr)
 {
 }
@@ -146,12 +147,19 @@ void WebPageBlink::init()
         LOG_DEBUG("[%s] trustLevel : trusted; allow load local Resources", qPrintable(appId()));
         d->pageView->SetAllowLocalResourceLoad(true);
     }
+
+    if (m_appDesc->customSuspendDOMTime() > suspendDelay()) {
+        if (m_appDesc->customSuspendDOMTime() > maxCustomSuspendDelay())
+            m_customSuspendDOMTime = maxCustomSuspendDelay();
+        else
+            m_customSuspendDOMTime = m_appDesc->customSuspendDOMTime();
+        LOG_DEBUG("[%s] set customSuspendDOMTime : %d ms", qPrintable(appId()), m_customSuspendDOMTime);
+    }
+
     d->pageView->AddUserStyleSheet("body { -webkit-user-select: none; } :focus { outline: none }");
     d->pageView->SetBackgroundColor(29, 29, 29, 0xFF);
 
     setDefaultFont(defaultFont());
-
-    d->pageView->SetFontHinting(webos::WebViewBase::FontRenderParams::HINTING_SLIGHT);
 
     QString language;
     getSystemLanguage(language);
@@ -169,6 +177,7 @@ void WebPageBlink::init()
     d->pageView->SetAudioGuidanceOn(isAccessibilityEnabled());
     updateBackHistoryAPIDisabled();
     d->pageView->SetUseUnlimitedMediaPolicy(m_appDesc->useUnlimitedMediaPolicy());
+    d->pageView->SetMediaPreferences(m_appDesc->mediaPreferences());
 
     d->pageView->UpdatePreferences();
 
@@ -227,11 +236,6 @@ int WebPageBlink::progress() const
 bool WebPageBlink::hasBeenShown() const
 {
     return m_hasBeenShown;
-}
-
-void WebPageBlink::replaceBaseUrl(QUrl newUrl)
-{
-    d->pageView->ReplaceBaseURL(newUrl.toString().toStdString(), url().toString().toStdString());
 }
 
 QUrl WebPageBlink::url() const
@@ -433,14 +437,16 @@ void WebPageBlink::suspendWebPageAll()
 
     m_isSuspended = true;
     if (shouldStopJSOnSuspend()) {
-        m_domSuspendTimer.start(suspendDelay(), this,
-                            &WebPageBlink::suspendWebPagePaintingAndJSExecution);
+        m_domSuspendTimer.start(m_customSuspendDOMTime ? m_customSuspendDOMTime : suspendDelay(),
+                                this,
+                                &WebPageBlink::suspendWebPagePaintingAndJSExecution);
     }
-    LOG_INFO(MSGID_SUSPEND_WEBPAGE, 3,
-        PMLOGKS("APP_ID", qPrintable(appId())),
-        PMLOGKFV("PID", "%d", getWebProcessPID()),
-        PMLOGKFV("DELAY", "%dms", suspendDelay()),
-        "DomSuspendTimer Started");
+    LOG_INFO(MSGID_SUSPEND_WEBPAGE,
+             2,
+             PMLOGKS("APP_ID", qPrintable(appId())),
+             PMLOGKFV("PID", "%d", getWebProcessPID()),
+             "DomSuspendTimer(%dms) Started",
+             m_customSuspendDOMTime ? m_customSuspendDOMTime : suspendDelay());
 }
 
 void WebPageBlink::resumeWebPageAll()
@@ -454,10 +460,6 @@ void WebPageBlink::resumeWebPageAll()
         resumeWebPagePaintingAndJSExecution();
     }
     resumeWebPageMedia();
-    if (m_appDesc->memoryOptimizeLevel() > 0)
-        d->pageView->SetGpuRasterizationAllowed(false);
-    else
-        d->pageView->SetGpuRasterizationAllowed(true);
     d->pageView->SetVisible(true);
 }
 
@@ -577,32 +579,6 @@ void WebPageBlink::updateExtensionData(const QString& key, const QString& value)
     evaluateJavaScript(eventJS);
 }
 
-void WebPageBlink::updatePageSettings()
-{
-    // When a container based app is launched
-    // if there any properties different from container app then should update
-    // ex, application description info
-    if(!m_appDesc)
-        return;
-
-    if(QString::fromStdString(m_appDesc->trustLevel()) == "trusted") {
-        LOG_DEBUG("[%s] trustLevel : trusted; allow load local Resources", qPrintable(appId()));
-        d->pageView->SetAllowLocalResourceLoad(true);
-    }
-
-    LOG_DEBUG("[%s] WebPageBlink::updatePageSettings(); update appId to chromium", qPrintable(appId()));
-    d->pageView->SetAppId(appId().toStdString());
-    d->pageView->SetTrustLevel(m_appDesc->trustLevel());
-    d->pageView->SetAppPath(m_appDesc->folderPath());
-
-    if (!std::isnan(m_appDesc->networkStableTimeout()) && (m_appDesc->networkStableTimeout() >= 0.0))
-        d->pageView->SetNetworkStableTimeout(m_appDesc->networkStableTimeout());
-
-    setCustomPluginIfNeeded();
-    updateBackHistoryAPIDisabled();
-    d->pageView->UpdatePreferences();
-}
-
 void WebPageBlink::handleDeviceInfoChanged(const QString& deviceInfo)
 {
     if (!d->m_palmSystem)
@@ -657,6 +633,11 @@ void WebPageBlink::didSwapCompositorFrame()
         m_observer->didSwapPageCompositorFrame();
 }
 
+void WebPageBlink::didResumeDOM()
+{
+    if (m_observer)
+        m_observer->didResumeDOM();
+}
 
 void WebPageBlink::loadFinished(const std::string& url)
 {
@@ -678,7 +659,7 @@ void WebPageBlink::loadFinished(const std::string& url)
     handleLoadFinished();
 }
 
-void WebPageBlink::loadStopped(const std::string& url)
+void WebPageBlink::loadStopped()
 {
     m_loadingUrl = "";
 }
@@ -706,7 +687,8 @@ void WebPageBlink::didFinishNavigation(const std::string& url, bool isInMainFram
 
 void WebPageBlink::loadProgressChanged(double progress)
 {
-    if (!(m_loadingUrl.empty() && progress == 0.1)) {
+    bool processTenPercent = std::abs(progress - 0.1f) < std::numeric_limits<float>::epsilon();
+    if (!(m_loadingUrl.empty() && processTenPercent)) {
         // m_loadingUrl is empty then net didStartNavigation yet, default(initial) progress : 0.1
         // so m_loadingUrl shouldn't be empty and greater than 0.1
         LOG_INFO(MSGID_LOAD, 2,
@@ -739,6 +721,10 @@ void WebPageBlink::loadFailed(const std::string& url, int errCode, const std::st
 
     m_loadFailedHostname = getHostname(url);
     handleLoadFailed(errCode);
+}
+
+void WebPageBlink::didErrorPageLoadedFromNetErrorHelper() {
+   m_didErrorPageLoadedFromNetErrorHelper = true;
 }
 
 void WebPageBlink::loadVisuallyCommitted()
@@ -785,10 +771,8 @@ void WebPageBlink::recreateWebView()
         // Remove white screen while reloading contents due to the renderer crash
         // 1. Reset state to mark next paint for notification when FMP done.
         //    It will be used to make webview visible later.
-        d->pageView->ResetStateToMarkNextPaintForContainer();
-        // 2. While rendering ready, set webview hidden.
-        d->pageView->SetVisible(false);
-        // 3. Set VisibilityState as Launching
+        d->pageView->ResetStateToMarkNextPaint();
+        // 2. Set VisibilityState as Launching
         //    It will be used later, WebViewImpl set RenderWidgetCompositor visible,
         //    and make it keep to render the contents.
         setVisibilityState(WebPageBase::WebPageVisibilityState::WebPageVisibilityStateLaunching);
@@ -1070,28 +1054,31 @@ void WebPageBlink::updateMediaCodecCapability()
 
 double WebPageBlink::devicePixelRatio()
 {
-    double appWidth = static_cast<double>(m_appDesc->widthOverride());
-    double appHeight =  static_cast<double>(m_appDesc->heightOverride());
-    if(appWidth == 0) appWidth = static_cast<double>(currentUiWidth());
-    if(appHeight == 0) appHeight = static_cast<double>(currentUiHeight());
+    float devicePixelRatio = 1.0;
 
-    double deviceWidth = 0;
-    double deviceHeight = 0;
+    int appWidth = m_appDesc->widthOverride();
+    int appHeight =  m_appDesc->heightOverride();
+    if(appWidth == 0) appWidth = currentUiWidth();
+    if(appHeight == 0) appHeight = currentUiHeight();
+    if (appWidth == 0 || appHeight == 0)
+        return devicePixelRatio;
 
+    int deviceWidth = 0;
+    int deviceHeight = 0;
     QString hardwareWidth, hardwareHeight;
     if (getDeviceInfo("HardwareScreenWidth", hardwareWidth) &&
         getDeviceInfo("HardwareScreenHeight", hardwareHeight)) {
-        deviceWidth = hardwareWidth.toDouble();
-        deviceHeight = hardwareHeight.toDouble();
+        deviceWidth = hardwareWidth.toInt();
+        deviceHeight = hardwareHeight.toInt();
     } else {
-        deviceWidth = static_cast<double>(currentUiWidth());
-        deviceHeight = static_cast<double>(currentUiHeight());
+        deviceWidth = currentUiWidth();
+        deviceHeight = currentUiHeight();
     }
 
-    double ratioX = deviceWidth/appWidth;
-    double ratioY = deviceHeight/appHeight;
-    double devicePixelRatio = 1.0;
-    if(ratioX != ratioY) {
+    float ratioX = static_cast<float>(deviceWidth)/appWidth;
+    float ratioY = static_cast<float>(deviceHeight)/appHeight;
+    bool ratiosAreEqual = std::abs(ratioX - ratioY) < std::numeric_limits<float>::epsilon();
+    if(!ratiosAreEqual) {
         // device resolution : 5120x2160 (UHD 21:9 - D9)
         // - app resolution : 1280x720 ==> 4:3 (have to take 3)
         // - app resolution : 1920x1080 ==> 2.6:2 (have to take 2)
@@ -1105,7 +1092,7 @@ double WebPageBlink::devicePixelRatio()
         // - app resolution : 1920x1080 ==> 2:2
         devicePixelRatio = ratioX;
     }
-    LOG_DEBUG("[%s] WebPageBlink::devicePixelRatio(); devicePixelRatio : %f; deviceWidth : %f, deviceHeight : %f, appWidth : %f, appHeight : %f",
+    LOG_DEBUG("[%s] WebPageBlink::devicePixelRatio(); devicePixelRatio : %f; deviceWidth : %d, deviceHeight : %d, appWidth : %d, appHeight : %d",
         qPrintable(appId()), devicePixelRatio, deviceWidth, deviceHeight, appWidth, appHeight);
     return devicePixelRatio;
 }
@@ -1220,11 +1207,6 @@ void WebPageBlink::setAudioGuidanceOn(bool on)
 {
     d->pageView->SetAudioGuidanceOn(on);
     d->pageView->UpdatePreferences();
-}
-
-void WebPageBlink::resetStateToMarkNextPaintForContainer()
-{
-    d->pageView->ResetStateToMarkNextPaintForContainer();
 }
 
 void WebPageBlink::updateBackHistoryAPIDisabled()

@@ -53,7 +53,7 @@ public:
     void LoadStarted() override;
     void LoadFinished(const std::string& url) override;
     void LoadFailed(const std::string& url, int errCode, const std::string& errDesc) override;
-    void LoadStopped(const std::string& url) override;
+    void LoadStopped() override;
     void DocumentLoadFinished() override;
     void DidStartNavigation(const std::string& url, bool isInMainFrame) override;
     void DidFinishNavigation(const std::string& url, bool isInMainFrame) override;
@@ -67,6 +67,8 @@ public:
     void HandleBrowserControlCommand(const std::string& command, const std::vector<std::string>& arguments) override;
     void HandleBrowserControlFunction(const std::string& command, const std::vector<std::string>& arguments, std::string* result) override;
     void LoadVisuallyCommitted() override;
+    void DidResumeDOM() override;
+    void DidErrorPageLoadedFromNetErrorHelper() override;
 
 private:
     WebPageBlinkDelegate* m_delegate;

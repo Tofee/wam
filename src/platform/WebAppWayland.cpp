@@ -514,7 +514,6 @@ void WebAppWayland::doAttach()
     setForceActivateVtgIfRequired();
 
     connect(page(), SIGNAL(webPageClosePageRequested()), this, SLOT(webPageClosePageRequestedSlot()));
-    connect(page(), SIGNAL(webPageTitleChanged()), this, SLOT(webPageTitleChangedSlot()));
     connect(page(), SIGNAL(webViewRecreated()), this, SLOT(webViewRecreatedSlot()));
 }
 
@@ -667,6 +666,8 @@ void WebAppWayland::webViewRecreatedSlot()
     m_appWindow->attachWebContents(page()->getWebContents());
     m_appWindow->RecreatedWebContents();
     page()->setPageProperties();
+    if (keepAlive())
+        page()->setKeepAliveWebApp(keepAlive());
     focus();
 }
 
@@ -674,6 +675,11 @@ void WebAppWayland::didSwapPageCompositorFrame()
 {
     if (m_appWindow)
         m_appWindow->didSwapPageCompositorFrame();
+}
+
+void WebAppWayland::didResumeDOM()
+{
+    focus();
 }
 
 void WebAppWayland::setForceActivateVtgIfRequired()

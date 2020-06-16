@@ -29,12 +29,12 @@ public:
     virtual QString getWebAppFactoryPluginTypes() const { return m_webAppFactoryPluginTypes; }
     virtual QString getWebAppFactoryPluginPath() const { return m_webAppFactoryPluginPath; }
     virtual int getSuspendDelayTime() const { return m_suspendDelayTime; }
+    virtual int getMaxCustomSuspendDelayTime() const { return m_maxCustomSuspendDelayTime; }
     virtual QString getWebProcessConfigPath() const { return m_webProcessConfigPath; }
     virtual bool isInspectorEnabled() const { return m_inspectorEnabled; }
     virtual bool isDevModeEnabled() const { return m_devModeEnabled; }
     virtual QString getErrorPageUrl() const { return m_errorPageUrl; }
     virtual QString getTelluriumNubPath() const { return m_telluriumNubPath; }
-    virtual bool isContainerAppEnabled() const { return m_containerAppEnabled; }
     virtual void postInitConfiguration();
     virtual bool isDynamicPluggableLoadEnabled() const { return m_dynamicPluggableLoadEnabled; }
     virtual bool isPostWebProcessCreatedDisabled() const { return m_postWebProcessCreatedDisabled; }
@@ -55,12 +55,12 @@ private:
     QString m_webAppFactoryPluginTypes;
     QString m_webAppFactoryPluginPath;
     int m_suspendDelayTime;
+    int m_maxCustomSuspendDelayTime;
     QString m_webProcessConfigPath;
     bool m_devModeEnabled;
     bool m_inspectorEnabled;
     QString m_errorPageUrl;
     QString m_telluriumNubPath;
-    bool m_containerAppEnabled;
     bool m_dynamicPluggableLoadEnabled;
     bool m_postWebProcessCreatedDisabled;
     bool m_checkLaunchTimeEnabled;

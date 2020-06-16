@@ -63,9 +63,9 @@ ApplicationDescription::ApplicationDescription()
     , m_disallowScrollingInMainFrame(true)
     , m_delayMsForLanchOptimization(0)
     , m_useUnlimitedMediaPolicy(false)
-    , m_memoryOptimizeLevel(0)
     , m_displayAffinity(kUndefinedDisplayId)
     , m_useVirtualKeyboard(true)
+    , m_customSuspendDOMTime(0)
 {
 }
 
@@ -153,8 +153,6 @@ std::unique_ptr<ApplicationDescription> ApplicationDescription::fromJsonString(c
     appDesc->m_handlesRelaunch = jsonObj["handlesRelaunch"].toBool();
     appDesc->m_defaultWindowType = jsonObj["defaultWindowType"].toString().toStdString();
     appDesc->m_inspectable = jsonObj["inspectable"].toBool();
-    appDesc->m_containerJS = jsonObj["containerJS"].toString().toStdString();
-    appDesc->m_containerCSS = jsonObj["containerCSS"].toString().toStdString();
     appDesc->m_enyoBundleVersion = jsonObj["enyoBundleVersion"].toString().toStdString();
     appDesc->m_enyoVersion = jsonObj["enyoVersion"].toString().toStdString();
     appDesc->m_version = jsonObj["version"].toString().toStdString();
@@ -183,6 +181,7 @@ std::unique_ptr<ApplicationDescription> ApplicationDescription::fromJsonString(c
 
     appDesc->m_usePrerendering = jsonObj.contains("usePrerendering") && jsonObj["usePrerendering"].toBool();
     appDesc->m_disallowScrollingInMainFrame = !jsonObj.contains("disallowScrollingInMainFrame") || jsonObj["disallowScrollingInMainFrame"].toBool();
+    appDesc->m_mediaPreferences = QJsonDocument(jsonObj["mediaExtension"].toObject()).toJson().data();
 
     // Handle accessibility, supportsAudioGuidance
     if (!jsonObj.value("accessibility").isUndefined() && jsonObj.value("accessibility").isObject()) {
@@ -289,8 +288,9 @@ std::unique_ptr<ApplicationDescription> ApplicationDescription::fromJsonString(c
     }
 
     appDesc->m_useUnlimitedMediaPolicy = jsonObj.contains("useUnlimitedMediaPolicy") && jsonObj["useUnlimitedMediaPolicy"].toBool();
-    appDesc->m_memoryOptimizeLevel = jsonObj.contains("memoryOptimizeLevel")
-        && jsonObj["memoryOptimizeLevel"].toInt();
+
+    if (!jsonObj.value("suspendDOMTime").isUndefined())
+        appDesc->m_customSuspendDOMTime= jsonObj["suspendDOMTime"].toInt();
 
     return appDesc;
 }

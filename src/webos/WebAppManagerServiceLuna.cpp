@@ -37,6 +37,7 @@
 LSMethod WebAppManagerServiceLuna::s_methods[] = {
     LS2_METHOD_ENTRY(launchApp),
     LS2_METHOD_ENTRY(killApp),
+    LS2_METHOD_ENTRY(pauseApp),
     LS2_METHOD_ENTRY(closeAllApps),
     LS2_METHOD_ENTRY(setInspectorEnable),
     LS2_METHOD_ENTRY(logControl),
@@ -58,19 +59,6 @@ WebAppManagerServiceLuna::WebAppManagerServiceLuna()
 
 WebAppManagerServiceLuna::~WebAppManagerServiceLuna()
 {
-    stopService();
-}
-
-bool WebAppManagerServiceLuna::stopService(LSErrorSafe* error)
-{
-    LSErrorSafe lsError;
-    if (!PalmServiceBase::stopService(&lsError) ) {
-        LOG_WARNING(MSGID_UNREG_LS2_FAIL, 2,
-            PMLOGKS("SERVICE", serviceName()),
-            PMLOGKS("ERROR", lsError.message), "");
-        return false;
-    }
-    return true;
 }
 
 bool WebAppManagerServiceLuna::startService()
@@ -162,7 +150,28 @@ QJsonObject WebAppManagerServiceLuna::killApp(QJsonObject request)
     else
     {
         reply["returnValue"] = false;
-        reply["errorCode"] = ERR_CODE_KILLAPP_NO_APP;
+        reply["errorCode"] = ERR_CODE_NO_RUNNING_APP;
+        reply["errorText"] = QString::fromStdString(err_noRunningApp);
+    }
+    return reply;
+}
+
+QJsonObject WebAppManagerServiceLuna::pauseApp(QJsonObject request)
+{
+    std::string id{request["appId"].toString().toStdString()};
+
+    LOG_INFO(MSGID_LUNA_API, 2, PMLOGKS("APP_ID", id.c_str()), PMLOGKS("API", "pauseApp"), "");
+
+    QJsonObject reply;
+    if (WebAppManagerService::onPauseApp(id))
+    {
+        reply["returnValue"] = true;
+        reply["appId"] = request["appId"].toString();
+    }
+    else
+    {
+        reply["returnValue"] = false;
+        reply["errorCode"] = ERR_CODE_NO_RUNNING_APP;
         reply["errorText"] = QString::fromStdString(err_noRunningApp);
     }
     return reply;
@@ -412,13 +421,6 @@ void WebAppManagerServiceLuna::getSystemLocalePreferencesCallback(QJsonObject re
         return;
 
     WebAppManagerService::setSystemLanguage(language);
-
-    if(m_bootDone)
-#ifndef PRELOADMANAGER_ENABLED
-        WebAppManagerService::restartContainerApp();
-#else
-        WebAppManagerService::closeContainerApp();
-#endif
 }
 
 void WebAppManagerServiceLuna::memoryManagerConnectCallback(QJsonObject reply)
@@ -432,16 +434,6 @@ void WebAppManagerServiceLuna::memoryManagerConnectCallback(QJsonObject reply)
                 "luna://com.webos.memorymanager/getCloseAppId",
                 closeAppObj, this)) {
             LOG_WARNING(MSGID_MEM_MGR_API_CALL_FAIL, 0, "Failed to get close application identifier");
-        }
-
-        QJsonObject clearContainer;
-        clearContainer["subscribe"] = true;
-        clearContainer["category"] = "/com/webos/memory";
-        clearContainer["method"] = "clearContainers";
-        if (!call<WebAppManagerServiceLuna, &WebAppManagerServiceLuna::clearContainersCallback>(
-                "luna://com.palm.bus/signal/addmatch",
-                clearContainer, this)) {
-            LOG_WARNING(MSGID_SIGNAL_REGISTRATION_FAIL, 0, "Failed to register a client for clearContainers");
         }
 
         QJsonObject thresholdChanged;
@@ -468,23 +460,6 @@ void WebAppManagerServiceLuna::getCloseAppIdCallback(QJsonObject reply)
 
     if(!appId.isEmpty())
         WebAppManagerService::setForceCloseApp(appId);
-#ifndef PRELOADMANAGER_ENABLED
-    else
-        WebAppManagerService::reloadContainerApp();
-#endif
-
-}
-
-void WebAppManagerServiceLuna::clearContainersCallback(QJsonObject reply)
-{
-    QString currentLevel = reply["currentLevel"].toString();
-    if (currentLevel.isEmpty()) {
-        LOG_DEBUG("No need to close");
-        return;
-    }
-
-    if (!WebAppManagerService::closeContainerApp())
-        LOG_DEBUG("clearContainerCallback - Failed to close container app");
 }
 
 void WebAppManagerServiceLuna::thresholdChangedCallback(QJsonObject reply)
@@ -551,13 +526,8 @@ void WebAppManagerServiceLuna::getAppStatusCallback(QJsonObject reply)
 
 void WebAppManagerServiceLuna::getForegroundAppInfoCallback(QJsonObject reply)
 {
-    if (m_clearedCache) {
+    if (m_clearedCache)
         m_clearedCache = false;
-#ifndef PRELOADMANAGER_ENABLED
-        if (!WebAppManagerService::shouldLaunchContainerAppOnDemand())
-            WebAppManagerService::startContainerTimer();
-#endif
-    }
 
     if(reply["returnValue"] == true) {
         if(!reply.value("appId").isUndefined()) {
@@ -582,34 +552,8 @@ void WebAppManagerServiceLuna::bootdConnectCallback(QJsonObject reply)
 void WebAppManagerServiceLuna::getBootStatusCallback(QJsonObject reply)
 {
     QJsonObject bootd_signals = reply["signals"].toObject();
-#ifndef PRELOADMANAGER_ENABLED
-    if(!WebAppManagerService::getContainerApp() &&
-       (bootd_signals["boot-done"].toBool() == true ||
-        reply["bootStatus"].toString() == "factory"))
-    {
-        WebAppManagerService::startContainerTimer();
-    }
-#endif
     m_bootDone = bootd_signals["boot-done"].toBool();
 }
-
-#ifndef PRELOADMANAGER_ENABLED
-void WebAppManagerServiceLuna::launchContainerApp(const QString& id)
-{
-    QJsonObject json;
-    json["id"] = id;
-    json["noSplash"] = true;
-
-    if (!LS2_CALL(launchContainerAppCallback, "luna://com.webos.applicationManager/launch", json)) {
-        LOG_WARNING(MSGID_CONTAINER_LAUNCH_FAIL, 0, "Failed to launch container via applicationManager");
-    }
-}
-
-void WebAppManagerServiceLuna::launchContainerAppCallback(QJsonObject reply)
-{
-    // TODO: check reply and relaunch container app.
-}
-#endif
 
 void WebAppManagerServiceLuna::closeApp(const std::string& id)
 {

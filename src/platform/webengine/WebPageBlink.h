@@ -33,13 +33,6 @@ class WebPageBlinkObserver;
 class WebPageBlink : public WebPageBase, public WebPageBlinkDelegate {
     Q_OBJECT
 public:
-    enum FontRenderParams {
-        HINTING_NONE = 0,
-        HINTING_SLIGHT = 1,
-        HINTING_MEDIUM = 2,
-        HINTING_FULL = 3
-    };
-
     WebPageBlink(const QUrl& url, std::shared_ptr<ApplicationDescription> desc, const QString& launchParams);
     ~WebPageBlink() override;
 
@@ -51,7 +44,6 @@ public:
     void setLaunchParams(const QString& params) override;
     void notifyMemoryPressure(webos::WebViewBase::MemoryPressureLevel level) override;
     QUrl url() const override;
-    void replaceBaseUrl(QUrl newUrl) override;
     void loadUrl(const std::string& url) override;
     int progress() const override;
     bool hasBeenShown() const override;
@@ -67,7 +59,6 @@ public:
     void closeVkb() override;
     bool isInputMethodActive() const override;
     void keyboardVisibilityChanged(bool visible) override;
-    void updatePageSettings() override;
     void handleDeviceInfoChanged(const QString& deviceInfo) override;
     void evaluateJavaScript(const QString& jsCode) override;
     void evaluateJavaScriptInAllFrames(const QString& jsCode, const char* method = "") override;
@@ -111,7 +102,7 @@ public:
     void didDropAllPeerConnections() override;
     void loadFinished(const std::string& url) override;
     void loadFailed(const std::string& url, int errCode, const std::string& errDesc) override;
-    void loadStopped(const std::string& url) override;
+    void loadStopped() override;
     void loadAborted(const std::string& url) override;
     void loadProgressChanged(double progress) override;
     void didStartNavigation(const std::string& url, bool isInMainFrame) override;
@@ -121,6 +112,7 @@ public:
     void renderProcessCrashed() override;
     void titleChanged(const std::string& title) override;
     void navigationHistoryChanged() override;
+    void didErrorPageLoadedFromNetErrorHelper() override;
 
     void updateExtensionData(const QString& key, const QString& value);
     void setLoadErrorPolicy(const QString& policy);
@@ -134,7 +126,6 @@ public:
     void updateMediaCodecCapability();
     double devicePixelRatio();
     void setAdditionalContentsScale(float scaleX, float scaleY);
-    void setFontHinting(FontRenderParams hinting);
     void setSupportDolbyHDRContents();
     void updateHardwareResolution();
 
@@ -144,11 +135,12 @@ public:
     void activateRendererCompositor() override;
     void deactivateRendererCompositor() override;
 
+    void didResumeDOM() override;
+
     // Timer callback
     void timeoutCloseCallback();
 
     void setAudioGuidanceOn(bool on) override;
-    void resetStateToMarkNextPaintForContainer() override;
     void updateBackHistoryAPIDisabled();
 
 Q_SIGNALS:
@@ -204,6 +196,7 @@ private:
     QString m_trustLevel;
     QString m_loadFailedHostname;
     std::string m_loadingUrl;
+    int m_customSuspendDOMTime;
 
     WebPageBlinkObserver *m_observer;
 };

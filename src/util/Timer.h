@@ -17,9 +17,6 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-int timeout_cb(void* data);
-int timeout_cb_destroy(void* data);
-
 typedef struct _GTimer GTimer;
 
 class Timer {
@@ -112,6 +109,7 @@ class ElapsedTimer {
 public:
     ElapsedTimer();
     ~ElapsedTimer();
+
     bool isRunning() const;
     void start();
     void stop();
@@ -119,6 +117,9 @@ public:
     int elapsed_us() const;
 
 private:
+    ElapsedTimer(const ElapsedTimer&) = delete;
+    ElapsedTimer& operator=(const ElapsedTimer&) = delete;
+
     bool m_isRunning;
     GTimer* m_timer;
 };

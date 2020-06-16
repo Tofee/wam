@@ -31,12 +31,15 @@
 
 #define CONSOLE_DEBUG(AAA) evaluateJavaScript(QStringLiteral("console.debug('") + QStringLiteral(AAA) + QStringLiteral("');"))
 
+const char kIdentifierForNetErrorPage[] = "com.webos.settingsservice.client";
+
 WebPageBase::WebPageBase()
     : m_appDesc(nullptr)
     , m_suspendAtLoad(false)
     , m_isClosing(false)
     , m_isLoadErrorPageFinish(false)
     , m_isLoadErrorPageStart(false)
+    , m_didErrorPageLoadedFromNetErrorHelper(false)
     , m_enableBackgroundRun(false)
     , m_loadErrorPolicy(QStringLiteral("default"))
     , m_cleaningResources(false)
@@ -51,6 +54,7 @@ WebPageBase::WebPageBase(const QUrl& url, std::shared_ptr<ApplicationDescription
     , m_isClosing(false)
     , m_isLoadErrorPageFinish(false)
     , m_isLoadErrorPageStart(false)
+    , m_didErrorPageLoadedFromNetErrorHelper(false)
     , m_enableBackgroundRun(false)
     , m_defaultUrl(url)
     , m_launchParams(params)
@@ -83,11 +87,10 @@ void WebPageBase::setApplicationDescription(std::shared_ptr<ApplicationDescripti
 
 QString WebPageBase::getIdentifier() const
 {
-    // If appId is ContainerAppId then it should be ""? Why not just container appid?
-    // I think there shouldn't be any chance to be returned container appid even for container base app
-
-    if(appId().isEmpty() || appId() == WebAppManager::instance()->getContainerAppId())
+    if(appId().isEmpty())
         return QStringLiteral("");
+    if ((m_isLoadErrorPageFinish && m_isLoadErrorPageStart) || m_didErrorPageLoadedFromNetErrorHelper)
+        return QString(kIdentifierForNetErrorPage);
     return m_appId;
 }
 
@@ -247,6 +250,7 @@ void WebPageBase::urlChangedSlot()
 void WebPageBase::handleLoadStarted()
 {
     m_suspendAtLoad = true;
+    m_didErrorPageLoadedFromNetErrorHelper = false;
 }
 
 void WebPageBase::handleLoadFinished()
@@ -256,8 +260,6 @@ void WebPageBase::handleLoadFinished()
         PMLOGKFV("PID", "%d", getWebProcessPID()),
         "WebPageBase::handleLoadFinished; m_suspendAtLoad : %s",
             m_suspendAtLoad ? "true; suspend in this time" : "false");
-    if (appId() == WebAppManager::instance()->getContainerAppId())
-        WebAppManager::instance()->setContainerAppLaunched(true);
 
     Q_EMIT webPageLoadFinished();
 
@@ -332,6 +334,11 @@ bool WebPageBase::processCrashed()
 int WebPageBase::suspendDelay()
 {
     return WebAppManager::instance()->getSuspendDelay();
+}
+
+int WebPageBase::maxCustomSuspendDelay()
+{
+    return WebAppManager::instance()->getMaxCustomSuspendDelay();
 }
 
 QString WebPageBase::telluriumNubPath()

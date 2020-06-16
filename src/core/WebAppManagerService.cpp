@@ -35,6 +35,11 @@ bool WebAppManagerService::onKillApp(const std::string& appId, bool force)
     return WebAppManager::instance()->onKillApp(appId, force);
 }
 
+bool WebAppManagerService::onPauseApp(const std::string& appId)
+{
+    return WebAppManager::instance()->onPauseApp(appId);
+}
+
 QJsonObject WebAppManagerService::onLogControl(const std::string& keys, const std::string& value)
 {
     LogManager::setLogControl(keys, value);
@@ -52,11 +57,6 @@ bool WebAppManagerService::onCloseAllApps(uint32_t pid)
 {
     LOG_INFO(MSGID_LUNA_API, 2, PMLOGKS("API", "closeAllApps"), PMLOGKFV("PID", "%d", pid), "");
     return WebAppManager::instance()->closeAllApps(pid);
-}
-
-bool WebAppManagerService::closeContainerApp()
-{
-    return WebAppManager::instance()->closeContainerApp();
 }
 
 bool WebAppManagerService::isDiscardCodeCacheRequired()
@@ -84,28 +84,6 @@ void WebAppManagerService::onClearBrowsingData(const int removeBrowsingDataMask)
 {
     WebAppManager::instance()->clearBrowsingData(removeBrowsingDataMask);
 }
-
-WebAppBase* WebAppManagerService::getContainerApp()
-{
-    return WebAppManager::instance()->getContainerApp();
-}
-
-#ifndef PRELOADMANAGER_ENABLED
-void WebAppManagerService::reloadContainerApp()
-{
-    WebAppManager::instance()->reloadContainerApp();
-}
-
-void WebAppManagerService::startContainerTimer()
-{
-    WebAppManager::instance()->startContainerTimer();
-}
-
-void WebAppManagerService::restartContainerApp()
-{
-    WebAppManager::instance()->restartContainerApp();
-}
-#endif
 
 void WebAppManagerService::setDeviceInfo(const QString &name, const QString &value)
 {
@@ -147,11 +125,6 @@ void WebAppManagerService::killCustomPluginProcess(const QString &appBasePath)
 void WebAppManagerService::requestKillWebProcess(uint32_t pid)
 {
     WebAppManager::instance()->requestKillWebProcess(pid);
-}
-
-bool WebAppManagerService::shouldLaunchContainerAppOnDemand()
-{
-    return WebAppManager::instance()->shouldLaunchContainerAppOnDemand();
 }
 
 std::list<const WebAppBase*> WebAppManagerService::runningApps()

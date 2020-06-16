@@ -84,16 +84,6 @@ public:
         return m_defaultWindowType;
     }
 
-    const std::string& containerJS() const
-    {
-        return m_containerJS;
-    }
-
-    const std::string& containerCSS() const
-    {
-        return m_containerCSS;
-    }
-
     const std::string& enyoBundleVersion() const
     {
         return m_enyoBundleVersion;
@@ -161,7 +151,6 @@ public:
     bool disallowScrollingInMainFrame() const { return m_disallowScrollingInMainFrame; }
     int delayMsForLaunchOptimization() const { return m_delayMsForLanchOptimization; }
     bool useUnlimitedMediaPolicy() const { return m_useUnlimitedMediaPolicy; }
-    int memoryOptimizeLevel() const { return m_memoryOptimizeLevel; }
     const std::string& locationHint() const { return m_locationHint; }
 
     struct WindowOwnerInfo {
@@ -196,6 +185,8 @@ public:
     // To support multi display
     DisplayId getDisplayAffinity() { return m_displayAffinity; }
     void setDisplayAffinity(DisplayId display) { m_displayAffinity = display; }
+    int customSuspendDOMTime() const { return m_customSuspendDOMTime; }
+    std::string mediaPreferences() const { return m_mediaPreferences; }
 
 private:
     std::string m_id;
@@ -213,8 +204,6 @@ private:
     bool m_handlesRelaunch;
     std::string m_folderPath;
     std::string m_defaultWindowType;
-    std::string m_containerJS;
-    std::string m_containerCSS;
     std::string m_enyoBundleVersion;
     QStringList m_supportedEnyoBundleVersions;
     std::string m_enyoVersion;
@@ -241,10 +230,11 @@ private:
     bool m_disallowScrollingInMainFrame;
     int m_delayMsForLanchOptimization;
     bool m_useUnlimitedMediaPolicy;
-    int m_memoryOptimizeLevel;
     int m_displayAffinity;
     std::string m_locationHint;
     bool m_useVirtualKeyboard;
+    int m_customSuspendDOMTime;
+    std::string m_mediaPreferences;
 };
 
 #endif /* APPLICATIONDESCRIPTION_H */
