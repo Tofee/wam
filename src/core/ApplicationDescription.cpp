@@ -208,7 +208,7 @@ std::unique_ptr<ApplicationDescription> ApplicationDescription::fromJsonString(c
     // Handle resolution
     if (!jsonObj.value("resolution").isUndefined()) {
         QString overrideResolution = jsonObj["resolution"].toString();
-        QStringList resList(overrideResolution.split("x", QString::KeepEmptyParts, Qt::CaseInsensitive));
+        QStringList resList(overrideResolution.split("x", Qt::KeepEmptyParts, Qt::CaseInsensitive));
         if(resList.size() == 2) {
             appDesc->m_widthOverride = resList.at(0).toInt();
             appDesc->m_heightOverride = resList.at(1).toInt();

@@ -41,7 +41,7 @@ QJsonObject BlinkWebProcessManager::getWebProcessProfiling()
     uint32_t pid;
     QList<uint32_t> processIdList;
 
-    QMap<uint32_t, QString> runningAppList;
+    QMultiMap<uint32_t, QString> runningAppList;
     std::list<const WebAppBase*> running = runningApps();
     for (std::list<const WebAppBase*>::iterator it = running.begin(); it != running.end(); ++it) {
         WebAppBase* app = findAppById((*it)->appId());
@@ -49,7 +49,7 @@ QJsonObject BlinkWebProcessManager::getWebProcessProfiling()
         if (!processIdList.contains(pid))
             processIdList.append(pid);
 
-        runningAppList.insertMulti(pid, app->appId());
+        runningAppList.insert(pid, app->appId());
     }
 
     for (int id = 0; id < processIdList.size(); id++) {
