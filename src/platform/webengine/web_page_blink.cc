@@ -17,6 +17,7 @@
 #include "web_page_blink.h"
 
 #include <algorithm>
+#include <limits>
 #include <cmath>
 #include <sstream>
 
