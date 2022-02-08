@@ -1,5 +1,5 @@
 {
-  "webapplication.management": [
+  "applications.internal": [
     "com.palm.webappmanager/clearBrowsingData",
     "com.palm.webappmanager/closeAllApps",
     "com.palm.webappmanager/closeByProcessId",
