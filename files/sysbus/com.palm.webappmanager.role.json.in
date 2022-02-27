@@ -18,7 +18,8 @@
           "com.webos.memorymanager",
           "com.webos.service.activitymanager",
           "com.webos.service.connectionmanager",
-          "com.webos.settingsservice"
+          "com.webos.settingsservice",
+          "com.palm.applicationManager-webappmgr"
         ]
       },
       {
