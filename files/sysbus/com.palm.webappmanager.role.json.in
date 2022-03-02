@@ -19,7 +19,8 @@
           "com.webos.service.activitymanager",
           "com.webos.service.connectionmanager",
           "com.webos.settingsservice",
-          "com.palm.applicationManager-webappmgr"
+          "com.palm.applicationManager-webappmgr",
+          "com.webos.lunasend-*"
         ]
       },
       {
