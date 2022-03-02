@@ -147,6 +147,7 @@ export WAM_EXTRA_FLAGS=""
 export WAM_JS_FLAGS=""
 export WAM_COMMON_SWITCHES=" \
     --accelerated-plugin-rendering-blacklist=device;drmAgent;sound;service \
+    --allow-file-access-from-files \
     --application-cache-domain-limit=$WAM_APPCACHE_DOMAINLIMIT \
     --application-cache-size=$WAM_APPCACHE_MAXSIZE \
     --autoplay-policy=no-user-gesture-required \
@@ -156,6 +157,7 @@ export WAM_COMMON_SWITCHES=" \
     --disable-extensions \
     --disable-gpu-rasterization \
     --disable-low-res-tiling \
+    --disable-web-security \
     --disk-cache-size=$WAM_DISKCACHE_MAXSIZE \
     --enable-accelerated-plugin-rendering \
     --enable-aggressive-release-policy \
