@@ -41,10 +41,8 @@ DeviceInfoImpl::DeviceInfoImpl()
 void DeviceInfoImpl::Initialize() {
   const std::string& json_string =
       util::ReadFile("/var/luna/preferences/localeInfo");
-  if (json_string.empty()) {
-    return;
-  }
-
+  if (!json_string.empty()) {
+      
   Json::Value locale_json = util::StringToJson(json_string);
   if (!locale_json.isObject() || locale_json.empty() ||
       !locale_json["localeInfo"].isObject() ||
@@ -66,6 +64,28 @@ void DeviceInfoImpl::Initialize() {
   SetSystemLanguage(language.c_str());
   SetDeviceInfo("LocalCountry", localcountry.c_str());
   SetDeviceInfo("SmartServiceCountry", smartservicecountry.c_str());
+  }
+
+  Json::Value deviceInfo_json(Json::objectValue);
+  deviceInfo_json["modelName"] = model_name_;
+  deviceInfo_json["platformVersion"] = platform_version_;
+  {
+    int major, minor, dot;
+    const int fields_count =
+        std::sscanf(platform_version_.c_str(), "%d.%d.%d", &major, &minor, &dot);
+    if (fields_count != 3) {
+      major = minor = dot = -1;
+    }
+
+    deviceInfo_json["platformVersionMajor"] = major;
+    deviceInfo_json["platformVersionMinor"] = minor;
+    deviceInfo_json["platformVersionDot"] = dot;
+  }
+  deviceInfo_json["screenWidth"] = screen_width_;
+  deviceInfo_json["screenHeight"] = screen_height_;
+  // deviceInfo_json["panelType"] = "";
+  
+  SetDeviceInfo("TvDeviceInfo", util::JsonToString(deviceInfo_json));
 }
 
 bool DeviceInfoImpl::GetInfoFromLunaPrefs(const char* key,
