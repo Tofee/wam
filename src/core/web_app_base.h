@@ -166,6 +166,7 @@ class WebAppBase : public WebPageObserver {
   bool need_reload_;
   bool crashed_;
   bool hidden_window_;
+  bool no_window_;
   bool close_page_requested_;  // window.close() is called once then have to
                                // drop further requests
 };
