@@ -409,7 +409,7 @@ void WebAppManagerServiceLuna::DidConnect() {
                 "Failed to connect to memory manager");
   }
 
-  params["serviceName"] = std::string("com.palm.applicationManager");
+  params["serviceName"] = std::string("com.webos.applicationManager");
   if (!GET_LS2_SERVER_STATUS(ApplicationManagerConnectCallback, params)) {
     LOG_WARNING(MSGID_APPMANAGER_CONNECT_FAIL, 0,
                 "Failed to connect to application manager");
@@ -567,7 +567,7 @@ void WebAppManagerServiceLuna::ApplicationManagerConnectCallback(
 
     if (!Call<WebAppManagerServiceLuna,
               &WebAppManagerServiceLuna::GetAppStatusCallback>(
-            "luna://com.palm.applicationManager/listApps", params, this)) {
+            "luna://com.webos.applicationManager/listApps", params, this)) {
       LOG_WARNING(MSGID_APP_MGR_API_CALL_FAIL, 0,
                   "Failed to get an application list");
     }
@@ -575,7 +575,7 @@ void WebAppManagerServiceLuna::ApplicationManagerConnectCallback(
     params["extraInfo"] = true;
     if (!Call<WebAppManagerServiceLuna,
               &WebAppManagerServiceLuna::GetForegroundAppInfoCallback>(
-            "luna://com.palm.applicationManager/getForegroundAppInfo", params,
+            "luna://com.webos.applicationManager/getForegroundAppInfo", params,
             this)) {
       LOG_WARNING(MSGID_APP_MGR_API_CALL_FAIL, 0,
                   "Failed to get foreground application Information");
@@ -667,7 +667,7 @@ void WebAppManagerServiceLuna::CloseApp(const std::string& id) {
   Json::Value json;
   json["instanceId"] = id;
 
-  if (!LS2_CALL(CloseAppCallback, "luna://com.palm.applicationManager/close",
+  if (!LS2_CALL(CloseAppCallback, "luna://com.webos.applicationManager/close",
                 json))
     LOG_WARNING(MSGID_CLOSE_CALL_FAIL, 0,
                 "Failed to send closeByAppId command to SAM");
