@@ -26,7 +26,7 @@ function relaunchHandler(e) {
     function onclosecallback() {
         var param = {};
         var q_param = {};
-        var serviceCall_url = "luna://com.webos.applicationManager/launch";
+        var serviceCall_url = "luna://com.webos.service.applicationManager/launch";
         param["id"] = PalmSystem.identifier;
         q_param["query"] = e.detail.query;
         param["params"] = q_param;
@@ -149,7 +149,7 @@ var onLaunchSetting = function (target) {
         if (response.returnValue === false)
             console.log("response.errorText : " + response.errorText);
     };
-    var url = "palm://com.webos.applicationManager/launch";
+    var url = "palm://com.webos.service.applicationManager/launch";
     var params = "{\"id\": \"com.palm.app.settings\", \"params\" : {\"target\":\"" + target + "\"}}";
     palmObject.call(url, params);
 }
@@ -267,7 +267,7 @@ var onRetryApp = function () {
                 console.log("response.errorText : " + response.errorText);
         };
 
-        var url = "palm://com.webos.applicationManager/launch";
+        var url = "palm://com.webos.service.applicationManager/launch";
         var params = "{\"id\":\"" + PalmSystem.identifier + "\"}";
         bridge.call(url, params);
     }
