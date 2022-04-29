@@ -14,6 +14,7 @@
         "outbound":[
           "com.palm.bus",
           "com.webos.applicationManager",
+          "com.webos.service.applicationManager",
           "com.webos.bootManager",
           "com.webos.memorymanager",
           "com.webos.service.activitymanager",
@@ -31,6 +32,7 @@
         "service":"com.webos.settingsservice.client-*",
         "outbound":[
           "com.webos.applicationManager",
+          "com.webos.service.applicationManager",
           "com.webos.settingsservice"
         ]
       }
