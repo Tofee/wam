@@ -101,6 +101,9 @@ if [ -e "etc/wam/make_shm.sh" ] ; then
     /etc/wam/make_shm.sh
 fi
 
+# Setup device pixel ratio
+export WAM_DEVICE_SCALE_RATIO=$(luna-send -n 1 -a com.webos.surfacemanager luna://com.webos.service.config/getConfigs '{"configNames":["com.webos.surfacemanager.devicePixelRatio"]}' | grep -oE "[0-9]+\.[0-9]+" || echo "1.0")
+
 # setup 8 Mb minimum codecache capacity
 export JSC_minGlobalCodeCacheCapacity=8388608
 
@@ -170,6 +173,7 @@ export WAM_COMMON_SWITCHES=" \
     --enable-neva-ime \
     --enable-threaded-compositing \
     --enable-watchdog \
+    --force-device-scale-factor=$WAM_DEVICE_SCALE_RATIO \
     --force-gpu-mem-available-mb=$MAX_GPU_MEM_LIMIT \
     --fps-counter-layout=tl \
     --hide-selection-handles \
