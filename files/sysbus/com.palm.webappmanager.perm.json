@@ -9,11 +9,10 @@
         "boot.query"
     ],
     "com.webos.rm.client.*": [
-        "media.operation"
+        "media"
     ],
     "com.webos.settingsservice.client-*": [
-        "application.operation",
-        "application.launcher",
-        "settings.query"
+        "applications.internal",
+        "settings.read"
     ]
 }
